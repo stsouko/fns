@@ -33,7 +33,7 @@ def create_core(**kwargs):
 
     if DEBUG:
         sql_debug(True)
-        x.bind('sqlite', 'database.sqlite')
+        x.bind('sqlite', '../database.sqlite')
     else:
         x.bind('postgres', user=user, password=password, host=DB_HOST, database=DB_NAME)
 

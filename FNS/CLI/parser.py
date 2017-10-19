@@ -29,11 +29,11 @@ from .main_add import add_core
 def _add(subparsers):
     parser = subparsers.add_parser('add', help='This utility add data',
                                    formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--fn', '-n', type=int, help='FN')
-    parser.add_argument('--fd', '-d', type=int, help='FD')
-    parser.add_argument('--fs', '-s', type=int, help='FS')
-    parser.add_argument("--database", '-db', type=str, default=DB_DATA_LIST[0], choices=DB_DATA_LIST,
-                        help='Database name for addition')
+    parser.add_argument('--fn', '-n', type=str, help='FN')
+    parser.add_argument('--fd', '-d', type=str, help='FD')
+    parser.add_argument('--fs', '-s', type=str, help='FS')
+    parser.add_argument("--database", '-db', type=str, default=DB_DATA_LIST and DB_DATA_LIST[0] or None,
+                        choices=DB_DATA_LIST, help='Database name for addition')
     parser.set_defaults(func=add_core)
 
 
@@ -52,7 +52,8 @@ def argparser():
     subparsers = parser.add_subparsers(title='subcommands', description='available utilities')
 
     _create_db(subparsers)
-    _add(subparsers)
+    if DB_DATA_LIST:
+        _add(subparsers)
 
     if find_spec('argcomplete'):
         from argcomplete import autocomplete

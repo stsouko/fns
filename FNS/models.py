@@ -20,7 +20,7 @@
 #
 from datetime import datetime
 from decimal import Decimal
-from pony.orm import PrimaryKey, Required, Set
+from pony.orm import PrimaryKey, Required, Set, composite_key
 from requests import get
 from .config import (DEBUG, FNS_SERVER, PROTO_VERSION, CLIENT_VERSION, DEVICE_OS, DEVICE_ID, USER_AGENT,
                      USER_LOGIN, USER_PASSWORD)
@@ -31,22 +31,29 @@ def load_tables(db, schema):
         _table_ = '%s_seller' % schema if DEBUG else (schema, 'seller')
         id = PrimaryKey(int, auto=True)
         title = Required(str)
-        inn = Required(int, unique=True)
+        inn = Required(str, unique=True)
         sales = Set('Sale')
 
         @classmethod
         def add_sale(cls, fn, fd, fs):
-            url = '%s/v1/inns/*/kkts/*/fss/%d/tickets/%d' % (FNS_SERVER, fn, fd)
+            if FiscalNumber.exists(sign=fs, drive=fn, document=fd):
+                raise Exception('Receipt exists')
+
+            url = '%s/v1/inns/*/kkts/*/fss/%s/tickets/%s' % (FNS_SERVER, fn, fd)
             q = get(url, params={'fiscalSign': fs, 'sendToEmail': 'no'}, auth=(USER_LOGIN, USER_PASSWORD),
                     headers={'ClientVersion': CLIENT_VERSION, 'Version': PROTO_VERSION, 'Device-OS': DEVICE_OS,
                              'Device-Id': DEVICE_ID, 'User-Agent': USER_AGENT})
 
             if q.status_code != 200:
-                return False
+                raise Exception('Error: %s' % q.text)
+
             data = q.json()['document']['receipt']
             date = datetime.strptime(data['dateTime'], '%Y-%m-%dT%H:%M:%S')
-            user = data['user']
-            inn = int(data['userInn'])
+            user = data['user'] or 'No Name'
+            inn = data['userInn']
+            if not data['items']:
+                raise Exception('Empty receipt')
+
             items = {}
             for x in data['items']:
                 key = (x['name'], Decimal(x['price'] / 100))
@@ -57,8 +64,9 @@ def load_tables(db, schema):
                     items[key] = (x['quantity'], Decimal(x['sum'] / 100))
 
             seller = cls.get(inn=inn) or cls(title=user, inn=inn)
+            fiscal = FiscalNumber(sign=fs, drive=fn, document=fd, date=date)
             for (name, price), (quantity, _sum) in items.items():
-                Sale(seller=seller, title=name, price=price, quantity=quantity, sum=_sum, date=date)
+                Sale(seller=seller, title=name, price=price, quantity=quantity, sum=_sum, fiscal=fiscal)
 
             return Decimal(data['totalSum'] / 100)
 
@@ -69,7 +77,17 @@ def load_tables(db, schema):
         price = Required(Decimal, precision=10, scale=2)
         quantity = Required(float)
         sum = Required(Decimal, precision=12, scale=2)
-        date = Required(datetime)
         seller = Required('Seller')
+        fiscal = Required('FiscalNumber')
+
+    class FiscalNumber(db.Entity):
+        _table_ = '%s_fiscal' % schema if DEBUG else (schema, 'fiscal')
+        id = PrimaryKey(int, auto=True)
+        sign = Required(str)
+        drive = Required(str)
+        document = Required(str)
+        date = Required(datetime)
+        composite_key(sign, drive, document)
+        sales = Set('Sale')
 
     return Seller, Sale
