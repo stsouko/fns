@@ -36,6 +36,7 @@ def load_tables(db, schema):
 
         @classmethod
         def add_sale(cls, fn, fd, fs):
+            fn, fd, fs = fn.lstrip('0'), fd.lstrip('0'), fs.lstrip('0')
             if FiscalNumber.exists(sign=fs, drive=fn, document=fd):
                 raise Exception('Receipt exists')
 

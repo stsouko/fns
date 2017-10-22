@@ -18,16 +18,23 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-from pony.orm import db_session
-from .. import Loader
+from pyzbar.pyzbar import decode
+from PIL import Image
 
 
-def add_core(**kwargs):
-    Loader.load_schemas()
-    seller = Loader.get_database(kwargs['database'])[0]
-    fn, fd, fs = kwargs['fn'], kwargs['fd'], kwargs['fs']
-    with db_session:
-        try:
-            print('Added. total sum:', seller.add_sale(fn, fd, fs))
-        except Exception as e:
-            print(e)
+replace = {'fn': 'fn', 'fp': 'fs', 'i': 'fd'}
+
+
+def qr_decode(img):
+    for x in decode(Image.open(img)):
+        if x.type == 'QRCODE':
+            try:
+                data = {}
+                for y in x.data.decode().split('&'):
+                    k, v = y.split('=')
+                    if k in replace:
+                        data[replace[k]] = v.strip()
+                if len(data) == 3:
+                    return data
+            except ValueError:
+                pass

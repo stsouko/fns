@@ -22,8 +22,9 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from importlib.util import find_spec
 from ..config import DB_DATA_LIST
 from ..version import version
-from .main_create import create_core
 from .main_add import add_core
+from .main_bot import bot_core
+from .main_create import create_core
 
 
 def _add(subparsers):
@@ -46,6 +47,13 @@ def _create_db(subparsers):
     parser.set_defaults(func=create_core)
 
 
+def _bot(subparsers):
+    parser = subparsers.add_parser('bot', help='This utility start telegram bot',
+                                   formatter_class=ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--non_stop', action='store_false', help='NonStop polling')
+    parser.set_defaults(func=bot_core)
+
+
 def argparser():
     parser = ArgumentParser(description='FNS', epilog="(c) Dr. Ramil Nugmanov", prog='fns')
     parser.add_argument("--version", "-v", action="version", version=version(), default=False)
@@ -54,6 +62,7 @@ def argparser():
     _create_db(subparsers)
     if DB_DATA_LIST:
         _add(subparsers)
+        _bot(subparsers)
 
     if find_spec('argcomplete'):
         from argcomplete import autocomplete

@@ -18,16 +18,8 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-from pony.orm import db_session
-from .. import Loader
+from ..telebot import bot
 
 
-def add_core(**kwargs):
-    Loader.load_schemas()
-    seller = Loader.get_database(kwargs['database'])[0]
-    fn, fd, fs = kwargs['fn'], kwargs['fd'], kwargs['fs']
-    with db_session:
-        try:
-            print('Added. total sum:', seller.add_sale(fn, fd, fs))
-        except Exception as e:
-            print(e)
+def bot_core(**kwargs):
+    bot.polling(none_stop=kwargs['non_stop'])

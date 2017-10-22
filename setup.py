@@ -33,7 +33,7 @@ setup(
     author_email='stsouko@live.ru',
     description='FNS',
     entry_points={'console_scripts': ['fns=FNS.CLI:launcher']},
-    install_requires=['requests', 'pony'],
+    install_requires=['requests', 'pony', 'pyzbar', 'pillow', 'pytelegrambotapi'],
     extras_require={'postgres_cffi':  ['cffi', 'psycopg2cffi'],
                     'postgres':  ['psycopg2'],
                     'autocomplete': ['argcomplete']},

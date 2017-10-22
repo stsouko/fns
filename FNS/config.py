@@ -33,6 +33,9 @@ DEVICE_ID = None
 USER_LOGIN = None
 USER_PASSWORD = None
 
+TELEBOT = None
+TELE_USER_DB_MAP = None
+
 DEBUG = True
 
 DB_USER = None
@@ -43,7 +46,8 @@ DB_DATA = None
 
 
 config_list = ('DB_USER', 'DB_PASS', 'DB_HOST', 'DB_NAME', 'DB_DATA', 'DEVICE_OS', 'DEVICE_ID', 'USER_AGENT',
-               'PROTO_VERSION', 'CLIENT_VERSION', 'FNS_SERVER', 'USER_LOGIN', 'USER_PASSWORD')
+               'PROTO_VERSION', 'CLIENT_VERSION', 'FNS_SERVER', 'USER_LOGIN', 'USER_PASSWORD', 'TELEBOT',
+               'TELE_USER_DB_MAP')
 
 config_load_list = ['DEBUG']
 config_load_list.extend(config_list)
@@ -69,3 +73,12 @@ with next(x for x in config_dirs if x.exists()).open() as f:
             print('line %d\n\n%s\n consist errors: %s' % (n, line, format_exc()), file=stderr)
 
 DB_DATA_LIST = DB_DATA.split() if DB_DATA else []
+
+if TELE_USER_DB_MAP:
+    tmp = TELE_USER_DB_MAP.split()
+    if len(tmp) > 1:
+        TELE_USER_DB = {x: y for x, y in zip(tmp[::2], tmp[1::2]) if y in DB_DATA_LIST}
+    else:
+        TELE_USER_DB = {}
+else:
+    TELE_USER_DB = {}
