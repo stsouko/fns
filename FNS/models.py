@@ -50,7 +50,7 @@ def load_tables(db, schema):
 
             data = q.json()['document']['receipt']
             date = datetime.strptime(data['dateTime'], '%Y-%m-%dT%H:%M:%S')
-            user = data['user'] or 'No Name'
+            user = data.get('user') or 'No Name'
             inn = data['userInn']
             if not data['items']:
                 raise Exception('Empty receipt')

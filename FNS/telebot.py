@@ -21,7 +21,7 @@
 from io import BytesIO
 from pony.orm import db_session
 from telebot import TeleBot
-from .config import TELEBOT, TELE_USER_DB
+from .config import TELEBOT, TELE_USER_DB, DEBUG
 from .qrdecode import qr_decode
 from . import Loader
 
@@ -36,6 +36,8 @@ def add_receipt(fn, fd, fs, db):
         try:
             return seller.add_sale(fn, fd, fs)
         except Exception as e:
+            if DEBUG:
+                print(e)
             return str(e)
 
 
