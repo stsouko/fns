@@ -19,7 +19,7 @@
 #  MA 02110-1301, USA.
 #
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from pony.orm import PrimaryKey, Required, Set, composite_key
 from requests import get
 from .config import (DEBUG, FNS_SERVER, PROTO_VERSION, CLIENT_VERSION, DEVICE_OS, DEVICE_ID, USER_AGENT,
@@ -46,7 +46,7 @@ def load_tables(db, schema):
                              'Device-Id': DEVICE_ID, 'User-Agent': USER_AGENT})
 
             if q.status_code != 200:
-                raise Exception('Error: %s' % q.text)
+                raise Exception('Error (%d): %s' % (q.status_code, q.text))
 
             data = q.json()['document']['receipt']
             date = datetime.strptime(data['dateTime'], '%Y-%m-%dT%H:%M:%S')
@@ -57,7 +57,7 @@ def load_tables(db, schema):
 
             items = {}
             for x in data['items']:
-                key = (x['name'], Decimal(x['price'] / 100))
+                key = (x['name'], Decimal(x['price'] / 100).quantize(Decimal('.01'), rounding=ROUND_HALF_UP))
                 if key in items:
                     q, s = items[key]
                     items[key] = (q + x['quantity'], s + Decimal(x['sum'] / 100))
@@ -69,7 +69,7 @@ def load_tables(db, schema):
             for (name, price), (quantity, _sum) in items.items():
                 Sale(seller=seller, title=name, price=price, quantity=quantity, sum=_sum, fiscal=fiscal)
 
-            return Decimal(data['totalSum'] / 100)
+            return Decimal(data['totalSum'] / 100).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
 
     class Sale(db.Entity):
         _table_ = '%s_sale' % schema if DEBUG else (schema, 'sale')
