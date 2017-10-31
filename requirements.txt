@@ -1,0 +1,5 @@
+requests
+pyzbar
+pillow
+telebot
+pony
