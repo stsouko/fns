@@ -32,7 +32,7 @@ bot = TeleBot(TELEBOT)
 def add_receipt(fn, fd, fs, db):
     Loader.load_schemas()
     seller = Loader.get_database(db)[0]
-    with db_session:
+    with db_session(sql_debug=DEBUG):
         try:
             return seller.add_sale(fn, fd, fs)
         except Exception as e:

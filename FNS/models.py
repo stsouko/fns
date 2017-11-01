@@ -32,7 +32,7 @@ def load_tables(db, schema):
         id = PrimaryKey(int, auto=True)
         title = Required(str)
         inn = Required(str, unique=True)
-        sales = Set('Sale')
+        sales = Set('FiscalNumber')
 
         @classmethod
         def add_sale(cls, fn, fd, fs):
@@ -65,20 +65,19 @@ def load_tables(db, schema):
                     items[key] = (x['quantity'], Decimal(x['sum'] / 100))
 
             seller = cls.get(inn=inn) or cls(title=user, inn=inn)
-            fiscal = FiscalNumber(sign=fs, drive=fn, document=fd, date=date)
+            fiscal = FiscalNumber(sign=fs, drive=fn, document=fd, date=date, seller=seller)
             for (name, price), (quantity, _sum) in items.items():
-                Sale(seller=seller, title=name, price=price, quantity=quantity, sum=_sum, fiscal=fiscal)
+                Goods(title=name, price=price, quantity=quantity, sum=_sum, fiscal=fiscal)
 
             return Decimal(data['totalSum'] / 100).quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
 
-    class Sale(db.Entity):
-        _table_ = '%s_sale' % schema if DEBUG else (schema, 'sale')
+    class Goods(db.Entity):
+        _table_ = '%s_goods' % schema if DEBUG else (schema, 'goods')
         id = PrimaryKey(int, auto=True)
         title = Required(str)
         price = Required(Decimal, precision=10, scale=2)
         quantity = Required(float)
         sum = Required(Decimal, precision=12, scale=2)
-        seller = Required('Seller')
         fiscal = Required('FiscalNumber')
 
     class FiscalNumber(db.Entity):
@@ -88,7 +87,8 @@ def load_tables(db, schema):
         drive = Required(str)
         document = Required(str)
         date = Required(datetime)
+        seller = Required('Seller')
         composite_key(sign, drive, document)
-        sales = Set('Sale')
+        goods = Set('Goods')
 
-    return Seller, Sale
+    return Seller, Goods

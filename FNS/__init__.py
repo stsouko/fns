@@ -18,7 +18,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
-from pony.orm import Database, sql_debug
+from pony.orm import Database
 from .config import DB_DATA_LIST, DEBUG, DB_PASS, DB_HOST, DB_USER, DB_NAME
 from .models import load_tables
 
@@ -30,9 +30,6 @@ class Loader:
     @classmethod
     def load_schemas(cls):
         if not cls.__schemas:
-            if DEBUG:
-                sql_debug(True)
-
             for schema in DB_DATA_LIST:
                 x = Database()
                 cls.__schemas[schema] = x
