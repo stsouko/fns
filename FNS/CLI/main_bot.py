@@ -18,8 +18,20 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #
+from requests.exceptions import ReadTimeout, ConnectionError
+from telebot.apihelper import ApiException
+from time import sleep
 from ..telebot import bot
 
 
 def bot_core(**kwargs):
-    bot.polling(none_stop=kwargs['non_stop'])
+    while True:
+        try:
+            bot.polling(none_stop=False)
+        except (ReadTimeout, ConnectionError, ApiException) as e:
+            print(e)
+            if kwargs['non_stop']:
+                sleep(10)
+                continue
+
+        break
