@@ -22,6 +22,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 from pony.orm import PrimaryKey, Required, Set, composite_key
 from requests import get
+from time import sleep
 from .config import (DEBUG, FNS_SERVER, PROTO_VERSION, CLIENT_VERSION, DEVICE_OS, DEVICE_ID, USER_AGENT,
                      USER_LOGIN, USER_PASSWORD)
 
@@ -41,9 +42,14 @@ def load_tables(db, schema):
                 raise Exception('Receipt exists')
 
             url = '%s/v1/inns/*/kkts/*/fss/%s/tickets/%s' % (FNS_SERVER, fn, fd)
-            q = get(url, params={'fiscalSign': fs, 'sendToEmail': 'no'}, auth=(USER_LOGIN, USER_PASSWORD),
-                    headers={'ClientVersion': CLIENT_VERSION, 'Version': PROTO_VERSION, 'Device-OS': DEVICE_OS,
-                             'Device-Id': DEVICE_ID, 'User-Agent': USER_AGENT})
+            for _ in range(2):
+                q = get(url, params={'fiscalSign': fs, 'sendToEmail': 'no'}, auth=(USER_LOGIN, USER_PASSWORD),
+                        headers={'ClientVersion': CLIENT_VERSION, 'Version': PROTO_VERSION, 'Device-OS': DEVICE_OS,
+                                 'Device-Id': DEVICE_ID, 'User-Agent': USER_AGENT})
+
+                if q.status_code != 202:
+                    break
+                sleep(3)
 
             if q.status_code != 200:
                 raise Exception('Error (%d): %s' % (q.status_code, q.text))

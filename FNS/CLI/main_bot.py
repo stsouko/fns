@@ -27,11 +27,12 @@ from ..telebot import bot
 def bot_core(**kwargs):
     while True:
         try:
-            bot.polling(none_stop=False)
+            bot.polling(none_stop=kwargs['non_stop'])
         except (ReadTimeout, ConnectionError, ApiException) as e:
             print(e)
             if kwargs['non_stop']:
                 sleep(10)
+                print('restarting')
                 continue
 
         break
